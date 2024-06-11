@@ -1,0 +1,37 @@
+// ==UserScript==
+// @name         Remove YouTube Shorts
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  Remove YouTube Shorts from YouTube home page
+// @author       sum
+// @match        *://*.youtube.com/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    function removeShorts() {
+        // Remove YouTube Shorts shelf
+        const shortsShelf = document.querySelectorAll('ytd-counterfactual-renderer.ytd-rich-section-renderer, #content.ytd-rich-section-renderer>ytd-rich-list-header-renderer.ytd-rich-section-renderer, #content.ytd-rich-section-renderer>ytd-shelf-renderer.ytd-rich-section-renderer, #content.ytd-rich-section-renderer>ytd-rich-shelf-renderer.ytd-rich-section-renderer');
+        shortsShelf.forEach(element => element.remove());
+
+        // Remove "Not interested" buttons related to Shorts
+        const notInterestedButtons = document.querySelectorAll('.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--text');
+        notInterestedButtons.forEach(button => {
+            if (button.innerText.includes("Not interested")) {
+                button.click();
+            }
+        });
+    }
+
+    // Observe changes to the page and remove Shorts as they are loaded
+    const observer = new MutationObserver(() => {
+        removeShorts();
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Initial removal of Shorts
+    removeShorts();
+})();
