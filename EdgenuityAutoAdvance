@@ -1,0 +1,84 @@
+// ==UserScript==
+// @name         Edgenuity Auto Advance Fix
+// @namespace    http://tampermonkey.net/
+// @version      1.5
+// @description  Auto advances videos, clicks "next activity". Does not break academic integrity. This is only meant to improve productivity.
+// @author       sum
+// @match        *://*.edgenuity.com/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const checkInterval = 2000;
+    const idleDuration = 2000;
+    let lastTime = 0;
+    let videoElement = null;
+    let lastState = 'unknown';
+
+    function isOnCourseMap() {
+        // Check if the URL contains '/coursemap'
+        return window.location.href.includes('/coursemap');
+    }
+
+    function checkVideoStatus() {
+        if (!videoElement) {
+            videoElement = document.querySelector('video#home_video_js');
+            if (!videoElement) {
+                return;
+            }
+        }
+
+        if (!videoElement.paused && !videoElement.ended) {
+            lastState = 'playing';
+            lastTime = Date.now();
+        } else {
+            if (Date.now() - lastTime > idleDuration) {
+                goToNextVideo();
+            } else if (videoElement.paused) {
+                lastState = 'paused';
+            } else if (videoElement.ended) {
+                lastState = 'ended';
+            }
+        }
+    }
+
+    function goToNextVideo() {
+        const nextButton = document.querySelector('.Toolbar .FramesList li.FrameRight');
+        if (nextButton) {
+            nextButton.click();
+            lastTime = Date.now();
+            lastState = 'unknown';
+        }
+    }
+
+    function checkNextActivityButton() {
+        const goRightButton = document.querySelector('.mainfoot a.goRight');
+        if (goRightButton && getComputedStyle(goRightButton).opacity === '1') {
+            goRightButton.click();
+            lastTime = Date.now();
+            lastState = 'unknown';
+        }
+    }
+
+    function checkCourseMapButton() {
+        if (isOnCourseMap()) {
+            const courseMapButton = document.querySelector('.btn-primary');
+            if (courseMapButton) {
+                courseMapButton.click();
+                lastTime = Date.now();
+                lastState = 'unknown';
+            }
+        }
+    }
+
+    setInterval(() => {
+        if (isOnCourseMap()) {
+            checkCourseMapButton();
+        } else {
+            checkVideoStatus();
+            checkNextActivityButton();
+        }
+    }, checkInterval);
+})();
